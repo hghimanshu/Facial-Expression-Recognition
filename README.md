@@ -4,7 +4,6 @@ This repo contains codes for Facial Expression Recognition System
 
 **--------------------------------**
 
-
 ### Dependencies
 
 1. Tensorflow
@@ -12,6 +11,10 @@ This repo contains codes for Facial Expression Recognition System
 3. Numpy
 4. Matplotlib
 5. Opencv
+
+###### Note:* Assuming that you have already installed all the dependencies
+
+**----------------------------------**
 
 ### Running the code
 
