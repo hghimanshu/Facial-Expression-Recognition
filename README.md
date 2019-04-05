@@ -19,7 +19,7 @@ This repo contains codes for Facial Expression Recognition System
 ### Running the code
 
 1. Clone the repository using 
-> https://github.com/hghimanshu/Facial-Expression-Recognition.git
+> git clone https://github.com/hghimanshu/Facial-Expression-Recognition.git
 
 2. After cloning type
 > cd Facial-Expression-Recognition/src
