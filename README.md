@@ -28,8 +28,8 @@ This repo contains codes for Facial Expression Recognition System
 
 4. Arrange the fer2013.csv file as :
     **data/**
-          **fer2013/**
-                  **fer2013.csv**
+      |   **fer2013/**
+      |            **fer2013.csv**
 
 5. For training, run
 > python train.py
