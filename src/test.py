@@ -4,9 +4,7 @@ from keras.preprocessing import image
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
-
-#variables
-num_classes = 7 #angry, disgust, fear, happy, sad, surprise, neutral
+import os
 
 # load json and create model
 json_file = open('model/model.json', 'r')
@@ -17,18 +15,9 @@ loaded_model = model_from_json(loaded_model_json)
 loaded_model.load_weights("model/weights.h5")
 print("Loaded model from disk")
 	
-
-##############-----------------------######################
-#------------------------------
-"""
-#overall evaluation
-score = model.evaluate(x_test, y_test)
-print('Test loss:', score[0])
-print('Test accuracy:', 100*score[1])
-"""
 #------------------------------
 #function for drawing bar chart for emotion preditions
-def emotion_analysis(emotions):
+def emotion_analysis(emotions, foldername):
     objects = ('angry', 'disgust', 'fear', 'happy', 'sad', 'surprise', 'neutral')
     y_pos = np.arange(len(objects))
     
@@ -36,29 +25,53 @@ def emotion_analysis(emotions):
     plt.xticks(y_pos, objects)
     plt.ylabel('percentage')
     plt.title('emotion')
-#    cv2.imshow("Result", new)
-#    cv2.waitKey()
-#    cv2.destroyAllWindows()
+    pred = "/".join(foldername.split('/')[:-1]) + '/' + foldername.split('/')[-2] + '_pred.png'
+    plt.savefig(pred)
     plt.show()
-#------------------------------
-#make prediction for custom image out of test set
+    
+## Loading the face cascade
+path = os.getcwd()
+face_cascade = cv2.CascadeClassifier('haarcascades/frontal_face_default.xml') 
+output_folder = path + '/Output/'
 
-#img = image.load_img("testing/1.jpg", color_mode = "grayscale", target_size=(48, 48))
-img = cv2.imread("testing/2.jpg")
-img = cv2.resize(img, (48,48))
-img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-x = image.img_to_array(img)
-x = np.expand_dims(x, axis = 0)
+input_folder = path + '/testing/'
+filename = '2.jpg'
 
-x /= 255
+foldername = output_folder + str(filename.split('.')[0]) + '/'
 
-custom = loaded_model.predict(x)
-emotion_analysis(custom[0])
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
+    
+if not os.path.exists(foldername):
+    os.makedirs(foldername)
 
-x = np.array(x, 'float32')
-x = x.reshape([48, 48]);
-
-cv2.imshow("Processed Image", x)
-cv2.waitKey()
+## Loading the image
+img = cv2.imread(input_folder + filename)
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+# Detects faces of different sizes in the input image 
+faces = face_cascade.detectMultiScale(gray, 1.2, 4) 
+if len(faces) >=1:
+    print('Face found')
+    for (x,y,w,h) in faces: 
+        # To draw a rectangle in a face  
+    #    cv2.rectangle(img,(x-20,y-20),(x+w+20,y+h+20),(255,255,0),2)  
+        roi_gray = gray[y-20:y+h+20, x-20:x+w+20] 
+        roi_color = img[y-20:y+h+20, x-20:x+w+20] 
+    
+        gray_image = cv2.resize(roi_gray, (48,48))
+        #image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        x = image.img_to_array(gray_image)
+        x = np.expand_dims(x, axis = 0)
+        
+        x /= 255
+        
+        custom = loaded_model.predict(x)
+        cv2.imshow("Processed Image", roi_color)
+        cv2.waitKey()
+        file = foldername + str(filename.split('.')[0]) + '.png'
+        cv2.imwrite(file, roi_color)
+        emotion_analysis(custom[0], foldername)
+else:
+    print('Face not detected')
 cv2.destroyAllWindows()
 #------------------------------
