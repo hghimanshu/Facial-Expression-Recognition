@@ -5,11 +5,12 @@ from keras.layers import Conv2D, MaxPooling2D, AveragePooling2D
 from keras.layers import Dense, Activation, Dropout, Flatten
 from keras.preprocessing.image import ImageDataGenerator
 import numpy as np
+from keras.regularizers import l2,l1
 
 #variables
 num_classes = 7 #angry, disgust, fear, happy, sad, surprise, neutral
-batch_size = 500
-epochs = 10
+batch_size = 250
+epochs = 100
 
 with open("data/fer2013/fer2013.csv") as f:
     content = f.readlines()
@@ -66,27 +67,35 @@ print(x_test.shape[0], 'test samples')
 #construct CNN structure
 model = Sequential()
 
+## Adding a batch normalization layer
+model.add(BatchNormalization(input_shape=(48,48,1)))
+
 #1st convolution layer
-model.add(Conv2D(64, (5, 5), activation='relu', input_shape=(48,48,1)))
-model.add(MaxPooling2D(pool_size=(5,5), strides=(2, 2)))
+model.add(Conv2D(64, (3, 3), activation='relu'))
+model.add(Conv2D(64, (3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2,2), strides=(2, 2)))
 
 #2nd convolution layer
-model.add(Conv2D(64, (3, 3), activation='relu'))
-model.add(Conv2D(64, (3, 3), activation='relu'))
-model.add(AveragePooling2D(pool_size=(3,3), strides=(2, 2)))
+model.add(Conv2D(128, (3, 3), activation='relu'))
+model.add(Conv2D(128, (3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2,2), strides=(2, 2)))
 
 #3rd convolution layer
-model.add(Conv2D(128, (3, 3), activation='relu'))
-model.add(Conv2D(128, (3, 3), activation='relu'))
-model.add(AveragePooling2D(pool_size=(3,3), strides=(2, 2)))
+model.add(Conv2D(256, (2, 2), activation='relu'))
+model.add(Conv2D(256, (3, 3), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2,2), strides=(2, 2)))
 
+#4th convolution layer
+model.add(Conv2D(512, (2, 2), activation='relu'))
+model.add(Conv2D(512, (2, 2), activation='relu'))
+model.add(MaxPooling2D(pool_size=(1,1), strides=(2, 2)))
 model.add(Flatten())
 
 #fully connected neural networks
-model.add(Dense(1024, activation='relu'))
+model.add(Dense(512, activation='relu'))
 model.add(Dropout(0.2))
 model.add(Dense(1024, activation='relu'))
-model.add(Dropout(0.2))
+model.add(Dropout(0.5))
 
 model.add(Dense(num_classes, activation='softmax'))
 #------------------------------
@@ -102,23 +111,11 @@ model.compile(loss='categorical_crossentropy'
 )
 
 #------------------------------
-
-fit = False
-
-if fit == True:
+## Start the training    
+#model.fit(x_train, y_train, epochs=epochs, validation_split=0.0, shuffle=True) #train for all trainset
+model.fit_generator(train_generator, steps_per_epoch=batch_size, epochs=epochs, validation_data=(x_test,y_test)) #train for randomly selected one
     
-	#model.fit_generator(x_train, y_train, epochs=epochs) #train for all trainset
-	model.fit_generator(train_generator, steps_per_epoch=batch_size, epochs=epochs) #train for randomly selected one
-else:
-	model.load_weights('model/weights.h5') #load weights
-    
-
-model.compile(loss='categorical_crossentropy'
-    , optimizer=keras.optimizers.Adam()
-    , metrics=['accuracy']
-)
-
-score = model.evaluate(x_train, y_train, verbose=0)
+score = model.evaluate(x_test, y_test, verbose=0)
 print("%s: %.2f%%" % (model.metrics_names[1], score[1]*100))
 
 
